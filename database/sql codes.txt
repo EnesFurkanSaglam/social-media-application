@@ -1,0 +1,68 @@
+CREATE TABLE users (
+    user_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    bio VARCHAR(255),  -- Kullanıcı hakkında kısa bilgi
+    profile_image_url VARCHAR(255),  -- Profil fotoğrafının URL’si
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+CREATE TABLE posts (
+    post_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,
+    content TEXT,  -- Gönderi içeriği
+    image_url VARCHAR(255),  -- Gönderi resim URL’si (opsiyonel)
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+CREATE TABLE comments (
+    comment_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    post_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,  -- Yorumu yapan kullanıcı
+    content TEXT NOT NULL,  -- Yorum içeriği
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+CREATE TABLE likes (
+    like_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    post_id BIGINT NOT NULL,
+    user_id BIGINT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (post_id, user_id),  -- Bir kullanıcı bir gönderiyi sadece bir kez beğenebilir
+    FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+CREATE TABLE followers (
+    follower_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,  -- Takip edilen kullanıcı
+    follower_user_id BIGINT NOT NULL,  -- Takip eden kullanıcı
+    followed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (user_id, follower_user_id),  -- Aynı kullanıcıyı birden fazla takip edemez
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (follower_user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+CREATE TABLE notifications (
+    notification_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NOT NULL,  -- Bildirim alan kullanıcı
+    triggered_by_user_id BIGINT NOT NULL,  -- Bildirimi tetikleyen kullanıcı
+    post_id BIGINT,  -- Bildirime konu olan gönderi (opsiyonel)
+    notification_type VARCHAR(50) NOT NULL,  -- Örn: 'like', 'comment', 'follow'
+    message TEXT,  -- Bildirim mesajı (örneğin: "Ali gönderinizi beğendi")
+    is_read BOOLEAN DEFAULT FALSE,  -- Bildirimin okunup okunmadığını belirtir
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (triggered_by_user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES posts(post_id) ON DELETE CASCADE
+);
+CREATE TABLE messages (
+    message_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    sender_id BIGINT NOT NULL,
+    receiver_id BIGINT NOT NULL,
+    content TEXT NOT NULL,
+    sent_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (sender_id) REFERENCES users(user_id) ON DELETE CASCADE,
+    FOREIGN KEY (receiver_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
